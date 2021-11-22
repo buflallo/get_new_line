@@ -71,40 +71,85 @@ char	*ft_strjoin(char const *s1, char const *s2,int s)
 
 int ft_strchr(const char *str,int a)
 {
+	int i;
+
+	i = 0;
 	while(a + 1)
 	{
+		i++;
 		if(str[a] == '\n')
-			return (1);
+			return (i);
 		a--;
 	}
 	return (0);
 }
 
+char	*ft_strdup(const char *s1, int len)
+{
+	char	*copy;
+	size_t	i;
+
+	i = 0;
+	copy = (char *)malloc(sizeof(char) * len + 1);
+	if (!copy)
+		return (NULL);
+	while (i < len)
+	{
+		copy[i] = s1[i];
+		i++;
+	}
+	copy[i] = '\0';
+	return (copy);
+}
+
 char *get_next_line(int fd)
 {
 	char* line;
-	char *res;
-	int size = 2;
+	int size = 19;
 	char *buf;
 	char *temp;
 	char *temp1;
 	int i = 0;
+	int test;
+	static char *res;
 
 	line = calloc(1,1);
 	temp = line;
+	if (res)
+	{
+		test = ft_strchr(res,ft_strlen(res)-1);
+		if (test)
+		{
+			if (test != 1)
+			{
+				res = ft_strdup(&res[test],ft_strlen(res));
+				return ft_substr(res,0,i,test);
+			}
+			else
+			{
+				line = res;
+				res = NULL;
+				return line;
+			}
+		}
+		else
+			line = ft_strdup(res,ft_strlen(res));
+	}
 	buf = malloc(size);
-	fd = open("smos",O_RDONLY);
 	i = read(fd,buf,size);
-	while (!ft_strchr(buf,(size - 1)) && i != 0)
+	while (!ft_strchr(buf,(size - 1)) && i > 0)
 	{
 		temp = line;
 		line = ft_strjoin(line,buf,size);
 		free(temp);
-		read(fd,buf,size);
+		i = read(fd,buf,size);
 	}
+	if (i <= 0)
+		return (NULL);
 	i = 0;
 	while (buf[i++] != '\n');
 	temp1 = ft_substr(buf,0,i,size);
+	res = ft_strdup(&buf[i],size - i);
 	free(buf);
 	temp = line;
 	line = ft_strjoin(line,temp1,size);
@@ -117,10 +162,24 @@ int main()
 {
 	char *line;
 	int fd;
-	fd = open("smos",O_RDONLY);
+	fd = open("test",O_RDONLY);
 	line = get_next_line(fd);
 	printf("line == %s",line);
 	free(line);
+	line = NULL;
+	line = get_next_line(fd);
+	printf("line == %s",line);
+	free(line);
+	line = NULL;
+
+	line = get_next_line(fd);
+	printf("line == %s",line);
+	free(line);
+	line = NULL;
+	line = get_next_line(fd);
+	printf("line == %s",line);
+	free(line);
+	line = NULL;
 
 	return 0;
 }
