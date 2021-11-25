@@ -39,11 +39,11 @@ char	*ft_substr(char const *s, unsigned int start, size_t len, int size)
 		sub = (char *)malloc(len + 1);
 	else
 		sub = (char *)malloc(size + 1);
-	if (!sub || !s)
+	if (!sub)
 		return (NULL);
 	else
 		sub[0] = '\0';
-	if (start > (unsigned int)i)
+	if (start > (unsigned int)size)
 		return (sub);
 	i = 0;
 	while (len-- && s[start])
@@ -74,12 +74,11 @@ int ft_strchr(const char *str,int a)
 	int i;
 
 	i = 0;
-	while(a + 1)
+	while(str[i] && a--)
 	{
-		i++;
-		if(str[a] == '\n')
+		if(str[i] == '\n')
 			return (i);
-		a--;
+		i++;
 	}
 	return (0);
 }
@@ -105,25 +104,26 @@ char	*ft_strdup(const char *s1, int len)
 char *get_next_line(int fd)
 {
 	char* line;
-	int size = 19;
+	int size = 33;
 	char *buf;
 	char *temp;
 	char *temp1;
 	int i = 0;
 	int test;
 	static char *res;
+	int test1;
 
-	line = calloc(1,1);
 	temp = line;
 	if (res)
 	{
-		test = ft_strchr(res,ft_strlen(res)-1);
+		test = ft_strchr(res,ft_strlen(res));
 		if (test)
 		{
 			if (test != 1)
 			{
-				res = ft_strdup(&res[test],ft_strlen(res));
-				return ft_substr(res,0,i,test);
+				line = ft_substr(res,0, test+1, size);
+				res = ft_substr(res,test + 1,ft_strlen(res),size);
+				return line;
 			}
 			else
 			{
@@ -135,6 +135,8 @@ char *get_next_line(int fd)
 		else
 			line = ft_strdup(res,ft_strlen(res));
 	}
+	else
+		line = calloc(1,1);
 	buf = malloc(size);
 	i = read(fd,buf,size);
 	while (!ft_strchr(buf,(size - 1)) && i > 0)
@@ -149,7 +151,8 @@ char *get_next_line(int fd)
 	i = 0;
 	while (buf[i++] != '\n');
 	temp1 = ft_substr(buf,0,i,size);
-	res = ft_strdup(&buf[i],size - i);
+	if((size - i))
+		res = ft_strdup(&buf[i],size - i);
 	free(buf);
 	temp = line;
 	line = ft_strjoin(line,temp1,size);
@@ -162,16 +165,7 @@ int main()
 {
 	char *line;
 	int fd;
-	fd = open("test",O_RDONLY);
-	line = get_next_line(fd);
-	printf("line == %s",line);
-	free(line);
-	line = NULL;
-	line = get_next_line(fd);
-	printf("line == %s",line);
-	free(line);
-	line = NULL;
-
+	fd = open("smos",O_RDONLY);
 	line = get_next_line(fd);
 	printf("line == %s",line);
 	free(line);
