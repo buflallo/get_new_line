@@ -1,50 +1,44 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <string.h>
-#include <unistd.h>
+#include "get_next_line.h"
+
 
 int	ft_strlen(const char *s)
 {
 	int	i;
 
 	i = 0;
-	while (s[i] != '\0')
+	while (s && s[i] != '\0')
 		i++;
 	return (i);
 }
-size_t	ft_strlcpy(char *dst, const char *src, size_t size)
-{
-	size_t	n;
 
-	n = 0;
-	if (size == 0)
-		return (0);
-	while (n < size - 1 && src[n])
+int	ft_strchr(char *a, char b)
+{
+	int	i;
+
+	if (!a)
+		return (-1);
+	i = 0;
+	while (a[i])
 	{
-		dst[n] = src[n];
-		n++;
+		if (a[i] == b)
+			return (i);
+		i++;
 	}
-	dst[n] = '\0';
-	return (1);
+	return (-1);
 }
-char	*ft_substr(char const *s, unsigned int start, size_t len, int size)
+
+char	*ft_substr(char const *s, unsigned int start, size_t len)
 {
 	char	*sub;
 	size_t	i;
 
 	if (!s)
 		return (NULL);
-	if (len <= size)
-		sub = (char *)malloc(len + 1);
-	else
-		sub = (char *)malloc(size + 1);
-	if (!sub || !s)
+	sub = (char *)malloc(len + 1);
+	if (!sub)
 		return (NULL);
 	else
 		sub[0] = '\0';
-	if (start > (unsigned int)i)
-		return (sub);
 	i = 0;
 	while (len-- && s[start])
 		sub[i++] = s[start++];
@@ -52,134 +46,80 @@ char	*ft_substr(char const *s, unsigned int start, size_t len, int size)
 	return (sub);
 }
 
-char	*ft_strjoin(char const *s1, char const *s2,int s)
+char	*ft_strjoin(char *a, char *b)
 {
-	int		size1;
-	char	*res;
-
-	if (!s1 || !s2)
-		return (NULL);
-	size1 = (int)ft_strlen(s1);
-	size1++;
-	res =malloc(size1 + s);
-	if (!res)
-		return (NULL);
-	ft_strlcpy(res, s1, size1);
-	ft_strlcpy((res + size1 - 1), s2, s + 1);
-	return (res);
-}
-
-int ft_strchr(const char *str,int a)
-{
-	int i;
+	int		i;
+	int		j;
+	char	*rend;
 
 	i = 0;
-	while(a + 1)
-	{
-		i++;
-		if(str[a] == '\n')
-			return (i);
-		a--;
-	}
-	return (0);
-}
-
-char	*ft_strdup(const char *s1, int len)
-{
-	char	*copy;
-	size_t	i;
-
-	i = 0;
-	copy = (char *)malloc(sizeof(char) * len + 1);
-	if (!copy)
+	j = 0;
+	rend = malloc(sizeof(char) * (ft_strlen(a) + ft_strlen(b) + 1));
+	if (!rend)
 		return (NULL);
-	while (i < len)
+	while (a && a[i])
 	{
-		copy[i] = s1[i];
+		rend[i] = a[i];
 		i++;
 	}
-	copy[i] = '\0';
-	return (copy);
+	while (b && b[j])
+	{
+		rend[i + j] = b[j];
+		j++;
+	}
+	rend[i + j] = '\0';
+	return (rend);
 }
 
-char *get_next_line(int fd)
+char	*get_next_line(int fd)
 {
-	char* line;
-	int size = 19;
 	char *buf;
-	char *temp;
-	char *temp1;
-	int i = 0;
-	int test;
-	static char *res;
+	static char *stock;
+	int t,l = 1;
+	int x = 10000000;
+	char *line;
 
-	line = calloc(1,1);
-	temp = line;
-	if (res)
+	t = ft_strchr(stock,'\n');
+	if (t == -1)
 	{
-		test = ft_strchr(res,ft_strlen(res)-1);
-		if (test)
+		buf = malloc(x);
+		buf[x] = '\0';
+		while (t == -1 && l != 0)
 		{
-			if (test != 1)
-			{
-				res = ft_strdup(&res[test],ft_strlen(res));
-				return ft_substr(res,0,i,test);
-			}
-			else
-			{
-				line = res;
-				res = NULL;
-				return line;
-			}
+			l = read(fd, buf, x);
+			if (l)
+				stock = ft_strjoin(stock, buf);
+			t = ft_strchr(stock,'\n');
 		}
-		else
-			line = ft_strdup(res,ft_strlen(res));
+		free
 	}
-	buf = malloc(size);
-	i = read(fd,buf,size);
-	while (!ft_strchr(buf,(size - 1)) && i > 0)
+	if (!stock)
+		return NULL;
+	if (l == 0)
 	{
-		temp = line;
-		line = ft_strjoin(line,buf,size);
-		free(temp);
-		i = read(fd,buf,size);
+		line = stock;
+		stock = NULL;
+		return line;
 	}
-	if (i <= 0)
-		return (NULL);
-	i = 0;
-	while (buf[i++] != '\n');
-	temp1 = ft_substr(buf,0,i,size);
-	res = ft_strdup(&buf[i],size - i);
-	free(buf);
-	temp = line;
-	line = ft_strjoin(line,temp1,size);
-	free(temp1);
-	free(temp);
+	line = ft_substr(stock, 0, t + 1);
+	stock = ft_substr(stock, t+1, ft_strlen(stock));
 	return line;
 }
 
-int main()
-{
-	char *line;
-	int fd;
-	fd = open("test",O_RDONLY);
-	line = get_next_line(fd);
-	printf("line == %s",line);
-	free(line);
-	line = NULL;
-	line = get_next_line(fd);
-	printf("line == %s",line);
-	free(line);
-	line = NULL;
+// int	main(void)
+// {
+// 	int	fd;
+// 	char *line;
+// 	int	i;
 
-	line = get_next_line(fd);
-	printf("line == %s",line);
-	free(line);
-	line = NULL;
-	line = get_next_line(fd);
-	printf("line == %s",line);
-	free(line);
-	line = NULL;
-
-	return 0;
-}
+// 	i = 0;
+// 	fd = open("get_next_line.c", O_RDONLY);
+// 	line = get_next_line(fd);
+// 	while (line)
+// 	{
+// 		printf("%s",line);
+// 		line = get_next_line(fd);
+// 	}
+// 	close(fd);
+// 	return (0);
+// }
